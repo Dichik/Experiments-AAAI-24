@@ -1,3 +1,3 @@
 # fairness-variance
 
-Studying model uncertainty and instability for different demographic groups
+Studying model fairness-stability-accuracy trade-offs.
