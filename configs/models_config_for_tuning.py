@@ -36,14 +36,14 @@ def get_folktables_employment_models_params_for_tuning(models_tuning_seed):
                 'bootstrap': [True, False]
             }
         },
-        'MLPClassifier': {
-            'model': MLPClassifier(hidden_layer_sizes=(100,100,), random_state=models_tuning_seed, max_iter=1000),
-            'params': {
-                'activation': ['logistic', 'tanh', 'relu'],
-                'solver': ['lbfgs', 'sgd', 'adam'],
-                'learning_rate': ['constant', 'invscaling', 'adaptive']
-            }
-        }
+        # 'MLPClassifier': {
+        #     'model': MLPClassifier(hidden_layer_sizes=(100,100,), random_state=models_tuning_seed, max_iter=1000),
+        #     'params': {
+        #         'activation': ['logistic', 'tanh', 'relu'],
+        #         'solver': ['lbfgs', 'sgd', 'adam'],
+        #         'learning_rate': ['constant', 'invscaling', 'adaptive']
+        #     }
+        # }
     }
 
 
