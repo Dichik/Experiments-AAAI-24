@@ -202,4 +202,6 @@ dmypy.json
 .pyre/
 
 venv/
+virny_venv2
+virny_venv
 # End of https://www.gitignore.io/api/python,pycharm+all

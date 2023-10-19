@@ -112,7 +112,7 @@ class ExperimentsComposer:
             for exp_iter in structured_exp_results_dct[model_name].keys():
                 for percentage in structured_exp_results_dct[model_name][exp_iter].keys():
                     model_subgroup_metrics_df = structured_exp_results_dct[model_name][exp_iter][percentage]
-                    model_subgroup_metrics_df = model_subgroup_metrics_df.drop(['Bootstrap_Model_Seed', 'Record_Create_Date_Time'], axis=1)
+                    model_subgroup_metrics_df = model_subgroup_metrics_df.drop(['Record_Create_Date_Time'], axis=1)
                     metrics_composer = MetricsComposer(
                         {model_name: model_subgroup_metrics_df},
                         self.sensitive_attributes_dct

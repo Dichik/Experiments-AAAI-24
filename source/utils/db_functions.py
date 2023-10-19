@@ -4,7 +4,7 @@ import pandas as pd
 
 from dotenv import load_dotenv
 from pymongo import MongoClient
-
+import certifi
 
 def connect_to_mongodb(collection_name, secrets_path: str = pathlib.Path(__file__).parent.joinpath('..', '..', 'configs', 'secrets.env')):
     load_dotenv(secrets_path)  # Take environment variables from .env
@@ -12,13 +12,14 @@ def connect_to_mongodb(collection_name, secrets_path: str = pathlib.Path(__file_
     # Provide the mongodb atlas url to connect python to mongodb using pymongo
     connection_string = os.getenv("CONNECTION_STRING")
     # Create a connection using MongoClient. You can import MongoClient or use pymongo.MongoClient
-    client = MongoClient(connection_string)
+    client = MongoClient(connection_string, tlsCAFile=certifi.where())
     collection = client[os.getenv("DB_NAME")][collection_name]
 
     def db_writer_func(run_models_metrics_df, collection=collection):
         # Rename Pandas columns to lower case
         run_models_metrics_df.columns = run_models_metrics_df.columns.str.lower()
         run_models_metrics_df = run_models_metrics_df.rename(columns={'model_seed': 'bootstrap_model_seed'})
+        print(run_models_metrics_df.to_dict('records'))
         collection.insert_many(run_models_metrics_df.to_dict('records'))
 
     return client, collection, db_writer_func

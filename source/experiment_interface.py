@@ -14,7 +14,7 @@ from source.utils.model_tuning_utils import tune_ML_models
 from source.utils.custom_logger import get_logger
 from source.preprocessing import remove_correlation, remove_correlation_for_mult_test_sets, \
     remove_disparate_impact, get_preprocessor_for_diabetes, preprocess_mult_data_loaders_for_disp_imp, \
-    remove_disparate_impact_with_mult_sets, get_simple_preprocessor
+    remove_disparate_impact_with_mult_sets, get_simple_preprocessor, lfr
 
 
 def run_exp_iter_with_preprocessing_intervention(data_loader, experiment_seed, test_set_fraction,
@@ -116,7 +116,6 @@ def run_exp_iter_with_disparate_impact(data_loader, experiment_seed, test_set_fr
         base_flow_dataset.init_features_df = init_data_loader.full_df.drop(init_data_loader.target, axis=1, errors='ignore')
         base_flow_dataset.X_train_val['RACE'] = data_loader.X_data.loc[base_flow_dataset.X_train_val.index, 'RACE']
         base_flow_dataset.X_test['RACE'] = data_loader.X_data.loc[base_flow_dataset.X_test.index, 'RACE']
-
     elif dataset_name == 'DiabetesDataset':
         data_loader.categorical_columns = [col for col in data_loader.categorical_columns if col not in ('gender', 'race')]
         data_loader.X_data['race_binary'] = data_loader.X_data['race'].apply(lambda x: 1 if x == 'Caucasian' else 0)
@@ -129,7 +128,6 @@ def run_exp_iter_with_disparate_impact(data_loader, experiment_seed, test_set_fr
         base_flow_dataset.init_features_df = init_data_loader.full_df.drop(init_data_loader.target, axis=1, errors='ignore')
         base_flow_dataset.X_train_val['race_binary'] = data_loader.X_data.loc[base_flow_dataset.X_train_val.index, 'race_binary']
         base_flow_dataset.X_test['race_binary'] = data_loader.X_data.loc[base_flow_dataset.X_test.index, 'race_binary']
-
     elif dataset_name == 'RicciDataset':
         data_loader.categorical_columns = [col for col in data_loader.categorical_columns if col not in ('Race')]
         data_loader.X_data['race_binary'] = data_loader.X_data['Race'].apply(lambda x: 1 if x == 'White' else 0)
@@ -142,7 +140,6 @@ def run_exp_iter_with_disparate_impact(data_loader, experiment_seed, test_set_fr
         base_flow_dataset.init_features_df = init_data_loader.full_df.drop(init_data_loader.target, axis=1, errors='ignore')
         base_flow_dataset.X_train_val['race_binary'] = data_loader.X_data.loc[base_flow_dataset.X_train_val.index, 'race_binary']
         base_flow_dataset.X_test['race_binary'] = data_loader.X_data.loc[base_flow_dataset.X_test.index, 'race_binary']
-
     elif dataset_name == 'LawSchoolDataset':
         data_loader.categorical_columns = [col for col in data_loader.categorical_columns if col not in ('male', 'race')]
         data_loader.X_data['race_binary'] = data_loader.X_data['race'].apply(lambda x: 1 if x == 'White' else 0)
@@ -155,6 +152,22 @@ def run_exp_iter_with_disparate_impact(data_loader, experiment_seed, test_set_fr
         base_flow_dataset.init_features_df = init_data_loader.full_df.drop(init_data_loader.target, axis=1, errors='ignore')
         base_flow_dataset.X_train_val['race_binary'] = data_loader.X_data.loc[base_flow_dataset.X_train_val.index, 'race_binary']
         base_flow_dataset.X_test['race_binary'] = data_loader.X_data.loc[base_flow_dataset.X_test.index, 'race_binary']
+    elif dataset_name == 'StudentPerformance':
+        # TODO add age as sensitive attribute
+        data_loader.categorical_columns = [col for col in data_loader.categorical_columns if
+                                           col not in ('sex')]
+        data_loader.X_data['sex_binary'] = data_loader.X_data['sex'].apply(lambda x: 1 if x == 'M' else 0)
+        data_loader.full_df = data_loader.full_df.drop(['sex'], axis=1)
+        data_loader.X_data = data_loader.X_data.drop(['sex'], axis=1)
+
+        # Preprocess the dataset using the defined preprocessor
+        column_transformer = get_simple_preprocessor(data_loader)
+        base_flow_dataset = preprocess_dataset(data_loader, column_transformer, test_set_fraction, experiment_seed)
+        base_flow_dataset.init_features_df = init_data_loader.full_df.drop(init_data_loader.target, axis=1,
+                                                                           errors='ignore')
+        base_flow_dataset.X_train_val['sex_binary'] = data_loader.X_data.loc[
+            base_flow_dataset.X_train_val.index, 'sex_binary']
+        base_flow_dataset.X_test['sex_binary'] = data_loader.X_data.loc[base_flow_dataset.X_test.index, 'sex_binary']
 
     if verbose:
         logger.info("The dataset is preprocessed")
@@ -169,7 +182,8 @@ def run_exp_iter_with_disparate_impact(data_loader, experiment_seed, test_set_fr
         custom_table_fields_dct['intervention_param'] = intervention_param
 
         # Fair preprocessing
-        cur_base_flow_dataset = remove_disparate_impact(base_flow_dataset, alpha=intervention_param)
+        # cur_base_flow_dataset = remove_disparate_impact(base_flow_dataset, alpha=intervention_param)
+        cur_base_flow_dataset = lfr(base_flow_dataset)
 
         # Tune model parameters if needed
         if with_tuning:

@@ -7,7 +7,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.impute import SimpleImputer
 from fairlearn.preprocessing import CorrelationRemover
 from aif360.datasets import BinaryLabelDataset
-from aif360.algorithms.preprocessing import DisparateImpactRemover
+from aif360.algorithms.preprocessing import DisparateImpactRemover, LFR
 from virny.preprocessing.basic_preprocessing import preprocess_dataset
 
 
@@ -130,8 +130,8 @@ def remove_disparate_impact(init_base_flow_dataset, alpha):
 
     """
     base_flow_dataset = copy.deepcopy(init_base_flow_dataset)
-    sensitive_attribute = 'RACE'
-    # sensitive_attribute = 'race_binary'
+    # sensitive_attribute = 'RACE'
+    sensitive_attribute = 'sex_binary'
     train_df = base_flow_dataset.X_train_val
     train_df[base_flow_dataset.target] = base_flow_dataset.y_train_val
     test_df = base_flow_dataset.X_test
@@ -160,6 +160,75 @@ def remove_disparate_impact(init_base_flow_dataset, alpha):
     base_flow_dataset.y_test = test_repaired_df[base_flow_dataset.target]
 
     return base_flow_dataset
+
+
+from aif360.metrics import BinaryLabelDatasetMetric
+
+def lfr(init_base_flow_dataset, display_metrics=False):
+    base_flow_dataset = copy.deepcopy(init_base_flow_dataset)
+    sensitive_attribute = 'sex_binary'
+    train_df = base_flow_dataset.X_train_val
+    train_df[base_flow_dataset.target] = base_flow_dataset.y_train_val
+    test_df = base_flow_dataset.X_test
+    test_df[base_flow_dataset.target] = base_flow_dataset.y_test
+
+    privileged_group = [{'sex_binary': 1}]
+    unprivileged_group = [{'sex_binary': 0}]
+
+    lfr = LFR(unprivileged_group, privileged_group)
+
+    train_binary_dataset = BinaryLabelDataset(df=train_df,
+                                              label_names=[base_flow_dataset.target],
+                                              protected_attribute_names=[sensitive_attribute],
+                                              favorable_label=1,
+                                              unfavorable_label=0)
+    test_binary_dataset = BinaryLabelDataset(df=test_df,
+                                             label_names=[base_flow_dataset.target],
+                                             protected_attribute_names=[sensitive_attribute],
+                                             favorable_label=1,
+                                             unfavorable_label=0)
+    if display_metrics:
+        metric_op = BinaryLabelDatasetMetric(train_binary_dataset,
+                                             unprivileged_groups=unprivileged_group,
+                                             privileged_groups=privileged_group)
+        print("Mean difference before:  %0.2f" % metric_op.mean_difference())
+        print("Disparate impact before: %0.2f" % metric_op.disparate_impact())
+
+    # train_df.to_csv('train_df_before.csv')
+
+    lfr = lfr.fit(train_binary_dataset)
+    train_repaired_df, _ = lfr.transform(train_binary_dataset).convert_to_dataframe()
+    # train_repaired_df.to_csv('train_df_after.csv')
+
+    if display_metrics:
+        train_repaired_binary_dataset = BinaryLabelDataset(df=train_repaired_df,
+                                                           label_names=[base_flow_dataset.target],
+                                                           protected_attribute_names=[sensitive_attribute],
+                                                           favorable_label=1,
+                                                           unfavorable_label=0)
+        metric_op = BinaryLabelDatasetMetric(train_repaired_binary_dataset,
+                                             unprivileged_groups=unprivileged_group,
+                                             privileged_groups=privileged_group)
+        print("Mean difference after:  %0.2f" % metric_op.mean_difference())
+        print("Disparate impact after: %0.2f" % metric_op.disparate_impact())
+
+
+    test_repaired_df, _ = lfr.transform(test_binary_dataset).convert_to_dataframe()
+    train_repaired_df.index = train_repaired_df.index.astype(dtype='int64')
+    test_repaired_df.index = test_repaired_df.index.astype(dtype='int64')
+
+    base_flow_dataset.X_train_val = train_repaired_df.drop([base_flow_dataset.target, sensitive_attribute], axis=1)
+    base_flow_dataset.y_train_val = train_repaired_df[base_flow_dataset.target]
+    base_flow_dataset.X_test = test_repaired_df.drop([base_flow_dataset.target, sensitive_attribute], axis=1)
+    base_flow_dataset.y_test = test_repaired_df[base_flow_dataset.target]
+
+    return base_flow_dataset
+
+# Example usage:
+# privileged_groups = [{'sex_binary': 1}]  # Define your privileged group(s)
+# unprivileged_groups = [{'sex_binary': 0}]  # Define your unprivileged group(s)
+# transformed_dataset = apply_lfr(init_base_flow_dataset, privileged_groups, unprivileged_groups, C=1.0, k=5, verbose=False)
+
 
 
 def remove_disparate_impact_with_mult_sets(init_base_flow_dataset, alpha, init_extra_base_flow_datasets):
