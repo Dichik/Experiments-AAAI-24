@@ -39,6 +39,16 @@ def get_folktables_employment_models_params_for_tuning(models_tuning_seed):
         # 'RandomForestClassifier': {
         #     'model': RandomForestClassifier(random_state=models_tuning_seed),
         #     'params': {
+        #         'n_estimators': [100, 200, 500, 700],
+        #         'max_depth': [10, 30, 50, 70, 90, None],
+        #         'min_samples_split': [2, 5, 10],
+        #         'min_samples_leaf': [1, 4],
+        #         'bootstrap': [True, False]
+        #     }
+        # },
+        # 'RandomForestClassifier': {
+        #     'model': RandomForestClassifier(random_state=models_tuning_seed),
+        #     'params': {
         #         'n_estimators': [100],
         #     }
         # },

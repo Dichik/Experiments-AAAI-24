@@ -14,14 +14,15 @@ class StudentPerformanceDataset(BaseDataLoader):
         target = 'G3'
         df[target] = (df[target] >= 10) * 1
 
-        df['G1'] = (df['G1'] >= 10) * 1
-        df['G2'] = (df['G2'] >= 10) * 1
+        # df['G1'] = (df['G1'] >= 10) * 1
+        # df['G2'] = (df['G2'] >= 10) * 1
 
+        df.drop(columns=['G1', 'G2'], inplace=True)
 
         categorical_columns = ['Mjob', 'Fjob', 'reason', 'guardian', 'sex']
         numerical_columns = ['age', 'Medu', 'Fedu', 'traveltime', 'studytime', 'failures',
                              'famrel', 'freetime', 'goout', 'Dalc', 'Walc', 'health',
-                             'absences', 'G1', 'G2']
+                             'absences']
 
         super().__init__(
             full_df=df,

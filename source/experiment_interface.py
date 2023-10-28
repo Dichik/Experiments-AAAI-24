@@ -16,6 +16,7 @@ from source.preprocessing import remove_correlation, remove_correlation_for_mult
     remove_disparate_impact, get_preprocessor_for_diabetes, preprocess_mult_data_loaders_for_disp_imp, \
     remove_disparate_impact_with_mult_sets, get_simple_preprocessor, lfr
 
+from IPython.display import display
 
 def run_exp_iter_with_preprocessing_intervention(data_loader, experiment_seed, test_set_fraction,
                                                  db_writer_func, fair_intervention_params_lst,
@@ -181,9 +182,24 @@ def run_exp_iter_with_disparate_impact(data_loader, experiment_seed, test_set_fr
         print('intervention_param: ', intervention_param)
         custom_table_fields_dct['intervention_param'] = intervention_param
 
-        # Fair preprocessing
-        # cur_base_flow_dataset = remove_disparate_impact(base_flow_dataset, alpha=intervention_param)
-        cur_base_flow_dataset = lfr(base_flow_dataset)
+        cur_base_flow_dataset = remove_disparate_impact(base_flow_dataset, alpha=intervention_param)
+        # cur_base_flow_dataset = lfr(base_flow_dataset, Az=intervention_param)
+        # display(cur_base_flow_dataset.X_train_val)
+        # display(cur_base_flow_dataset.X_test)
+        #
+        # from sklearn.ensemble import RandomForestClassifier
+        #
+        # from sklearn.metrics import classification_report
+        #
+        # rfc = RandomForestClassifier(random_state=42)
+        #
+        # rfc = rfc.fit(cur_base_flow_dataset.X_train_val, cur_base_flow_dataset.y_train_val)
+        #
+        # y_pred = rfc.predict(cur_base_flow_dataset.X_test)
+        #
+        # report = classification_report(cur_base_flow_dataset.y_test, y_pred)
+        # print("Classification Report:\n", report)
+
 
         # Tune model parameters if needed
         if with_tuning:

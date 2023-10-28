@@ -164,7 +164,7 @@ def remove_disparate_impact(init_base_flow_dataset, alpha):
 
 from aif360.metrics import BinaryLabelDatasetMetric
 
-def lfr(init_base_flow_dataset, display_metrics=False):
+def lfr(init_base_flow_dataset, Az, display_metrics=False):
     base_flow_dataset = copy.deepcopy(init_base_flow_dataset)
     sensitive_attribute = 'sex_binary'
     train_df = base_flow_dataset.X_train_val
@@ -175,7 +175,7 @@ def lfr(init_base_flow_dataset, display_metrics=False):
     privileged_group = [{'sex_binary': 1}]
     unprivileged_group = [{'sex_binary': 0}]
 
-    lfr = LFR(unprivileged_group, privileged_group)
+    lfr = LFR(unprivileged_group, privileged_group, k=5, Ax=0.1, Ay=0.1, Az=Az)
 
     train_binary_dataset = BinaryLabelDataset(df=train_df,
                                               label_names=[base_flow_dataset.target],
@@ -223,13 +223,6 @@ def lfr(init_base_flow_dataset, display_metrics=False):
     base_flow_dataset.y_test = test_repaired_df[base_flow_dataset.target]
 
     return base_flow_dataset
-
-# Example usage:
-# privileged_groups = [{'sex_binary': 1}]  # Define your privileged group(s)
-# unprivileged_groups = [{'sex_binary': 0}]  # Define your unprivileged group(s)
-# transformed_dataset = apply_lfr(init_base_flow_dataset, privileged_groups, unprivileged_groups, C=1.0, k=5, verbose=False)
-
-
 
 def remove_disparate_impact_with_mult_sets(init_base_flow_dataset, alpha, init_extra_base_flow_datasets):
     """
