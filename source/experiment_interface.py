@@ -182,8 +182,8 @@ def run_exp_iter_with_disparate_impact(data_loader, experiment_seed, test_set_fr
         print('intervention_param: ', intervention_param)
         custom_table_fields_dct['intervention_param'] = intervention_param
 
-        cur_base_flow_dataset = remove_disparate_impact(base_flow_dataset, alpha=intervention_param)
-        # cur_base_flow_dataset = lfr(base_flow_dataset, Az=intervention_param)
+        # cur_base_flow_dataset = remove_disparate_impact(base_flow_dataset, alpha=intervention_param)
+        cur_base_flow_dataset = lfr(base_flow_dataset, inter_param=intervention_param)
         # display(cur_base_flow_dataset.X_train_val)
         # display(cur_base_flow_dataset.X_test)
         #
