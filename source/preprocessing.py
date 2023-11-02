@@ -164,7 +164,7 @@ def remove_disparate_impact(init_base_flow_dataset, alpha):
 
 from aif360.metrics import BinaryLabelDatasetMetric
 
-def lfr(init_base_flow_dataset, inter_param, display_metrics=False):
+def lfr(init_base_flow_dataset, inter_param):
     base_flow_dataset = copy.deepcopy(init_base_flow_dataset)
     sensitive_attribute = 'sex_binary'
     train_df = base_flow_dataset.X_train_val
@@ -175,8 +175,6 @@ def lfr(init_base_flow_dataset, inter_param, display_metrics=False):
     privileged_group = [{'sex_binary': 1}]
     unprivileged_group = [{'sex_binary': 0}]
 
-    # lfr = LFR(unprivileged_group, privileged_group, Ax=10, Ay=0.01, Az=Az)
-    lfr = LFR(unprivileged_group, privileged_group)
 
     train_binary_dataset = BinaryLabelDataset(df=train_df,
                                               label_names=[base_flow_dataset.target],
@@ -188,33 +186,18 @@ def lfr(init_base_flow_dataset, inter_param, display_metrics=False):
                                              protected_attribute_names=[sensitive_attribute],
                                              favorable_label=1,
                                              unfavorable_label=0)
-    if display_metrics:
-        metric_op = BinaryLabelDatasetMetric(train_binary_dataset,
-                                             unprivileged_groups=unprivileged_group,
-                                             privileged_groups=privileged_group)
-        print("Mean difference before:  %0.2f" % metric_op.mean_difference())
-        print("Disparate impact before: %0.2f" % metric_op.disparate_impact())
 
-    # train_df.to_csv('train_df_before.csv')
+    if inter_param != 0.0:
+        # lfr = LFR(unprivileged_group, privileged_group, Ax=10, Ay=0.01, Az=Az)
+        lfr = LFR(unprivileged_group, privileged_group, Ax=50, Ay=0.01, Az=inter_param)
+        lfr = lfr.fit(train_binary_dataset)
 
-    lfr = lfr.fit(train_binary_dataset)
-    train_repaired_df, _ = lfr.transform(train_binary_dataset, threshold=inter_param).convert_to_dataframe()
-    # train_repaired_df.to_csv('train_df_after.csv')
+        train_repaired_df, _ = lfr.transform(train_binary_dataset).convert_to_dataframe()
+        test_repaired_df, _ = lfr.transform(test_binary_dataset).convert_to_dataframe()
+    else:
+        train_repaired_df, _ = train_binary_dataset.convert_to_dataframe()
+        test_repaired_df, _ = test_binary_dataset.convert_to_dataframe()
 
-    if display_metrics:
-        train_repaired_binary_dataset = BinaryLabelDataset(df=train_repaired_df,
-                                                           label_names=[base_flow_dataset.target],
-                                                           protected_attribute_names=[sensitive_attribute],
-                                                           favorable_label=1,
-                                                           unfavorable_label=0)
-        metric_op = BinaryLabelDatasetMetric(train_repaired_binary_dataset,
-                                             unprivileged_groups=unprivileged_group,
-                                             privileged_groups=privileged_group)
-        print("Mean difference after:  %0.2f" % metric_op.mean_difference())
-        print("Disparate impact after: %0.2f" % metric_op.disparate_impact())
-
-
-    test_repaired_df, _ = lfr.transform(test_binary_dataset, threshold=inter_param).convert_to_dataframe()
     train_repaired_df.index = train_repaired_df.index.astype(dtype='int64')
     test_repaired_df.index = test_repaired_df.index.astype(dtype='int64')
 
