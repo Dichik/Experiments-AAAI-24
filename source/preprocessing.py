@@ -130,8 +130,8 @@ def remove_disparate_impact(init_base_flow_dataset, alpha):
 
     """
     base_flow_dataset = copy.deepcopy(init_base_flow_dataset)
-    # sensitive_attribute = 'RACE'
-    sensitive_attribute = 'sex_binary'
+    sensitive_attribute = 'RACE'
+    # sensitive_attribute = 'sex_binary'
     train_df = base_flow_dataset.X_train_val
     train_df[base_flow_dataset.target] = base_flow_dataset.y_train_val
     test_df = base_flow_dataset.X_test
@@ -166,15 +166,19 @@ from aif360.metrics import BinaryLabelDatasetMetric
 
 def lfr(init_base_flow_dataset, inter_param):
     base_flow_dataset = copy.deepcopy(init_base_flow_dataset)
-    sensitive_attribute = 'sex_binary'
+    # sensitive_attribute = 'sex_binary'
+    sensitive_attribute = 'RACE'
+
     train_df = base_flow_dataset.X_train_val
     train_df[base_flow_dataset.target] = base_flow_dataset.y_train_val
     test_df = base_flow_dataset.X_test
     test_df[base_flow_dataset.target] = base_flow_dataset.y_test
 
-    privileged_group = [{'sex_binary': 1}]
-    unprivileged_group = [{'sex_binary': 0}]
+    # privileged_group = [{'sex_binary': 1}]
+    # unprivileged_group = [{'sex_binary': 0}]
 
+    privileged_group = [{'RACE': 1}]
+    unprivileged_group = [{'RACE': 0}]
 
     train_binary_dataset = BinaryLabelDataset(df=train_df,
                                               label_names=[base_flow_dataset.target],
@@ -189,7 +193,14 @@ def lfr(init_base_flow_dataset, inter_param):
 
     if inter_param != 0.0:
         # lfr = LFR(unprivileged_group, privileged_group, Ax=10, Ay=0.01, Az=Az)
-        lfr = LFR(unprivileged_group, privileged_group, Ax=50, Ay=0.01, Az=inter_param)
+        if inter_param == "Ax=50, Az=10, Ay=10":
+            lfr = LFR(unprivileged_group, privileged_group, Ax=0.5, Ay=10, Az=0.1)
+        elif inter_param == "Ax=10, Az=50, Ay=10":
+            lfr = LFR(unprivileged_group, privileged_group, Ax=0.1, Ay=50, Az=0.01)
+        elif inter_param == "Ax=50, Az=50, Ay=10":
+            lfr = LFR(unprivileged_group, privileged_group, Ax=0.50, Ay=0.50, Az=0.10)
+        else:
+            lfr = LFR(unprivileged_group, privileged_group)
         lfr = lfr.fit(train_binary_dataset)
 
         train_repaired_df, _ = lfr.transform(train_binary_dataset).convert_to_dataframe()
