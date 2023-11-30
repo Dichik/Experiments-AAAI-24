@@ -1,6 +1,7 @@
 import copy
 import numpy as np
 import pandas as pd
+import re
 
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -162,7 +163,17 @@ def remove_disparate_impact(init_base_flow_dataset, alpha):
     return base_flow_dataset
 
 
-from aif360.metrics import BinaryLabelDatasetMetric
+
+def parse_string(input_string):
+    pattern = re.compile(r'([A-Za-z]+)=(\d+)')
+    matches = pattern.findall(input_string)
+
+    result = {}
+    for key, value in matches:
+        result[key] = int(value)
+
+    return result
+
 
 def lfr(init_base_flow_dataset, inter_param):
     base_flow_dataset = copy.deepcopy(init_base_flow_dataset)
@@ -191,23 +202,16 @@ def lfr(init_base_flow_dataset, inter_param):
                                              favorable_label=1,
                                              unfavorable_label=0)
 
-    if inter_param != 0.0:
-        # lfr = LFR(unprivileged_group, privileged_group, Ax=10, Ay=0.01, Az=Az)
-        if inter_param == "Ax=50, Az=10, Ay=10":
-            lfr = LFR(unprivileged_group, privileged_group, Ax=0.5, Ay=10, Az=0.1)
-        elif inter_param == "Ax=10, Az=50, Ay=10":
-            lfr = LFR(unprivileged_group, privileged_group, Ax=0.1, Ay=50, Az=0.01)
-        elif inter_param == "Ax=50, Az=50, Ay=10":
-            lfr = LFR(unprivileged_group, privileged_group, Ax=0.50, Ay=0.50, Az=0.10)
-        else:
-            lfr = LFR(unprivileged_group, privileged_group)
-        lfr = lfr.fit(train_binary_dataset)
+    parsed_values = parse_string(inter_param)
+    lfr = LFR(unprivileged_group, privileged_group,
+              Ax=parsed_values["Ax"],
+              Ay=parsed_values["Ay"],
+              Az=parsed_values["Az"]
+    )
+    lfr = lfr.fit(train_binary_dataset, maxiter=5000, maxfun=5000)
 
-        train_repaired_df, _ = lfr.transform(train_binary_dataset).convert_to_dataframe()
-        test_repaired_df, _ = lfr.transform(test_binary_dataset).convert_to_dataframe()
-    else:
-        train_repaired_df, _ = train_binary_dataset.convert_to_dataframe()
-        test_repaired_df, _ = test_binary_dataset.convert_to_dataframe()
+    train_repaired_df, _ = lfr.transform(train_binary_dataset).convert_to_dataframe()
+    test_repaired_df, _ = lfr.transform(test_binary_dataset).convert_to_dataframe()
 
     train_repaired_df.index = train_repaired_df.index.astype(dtype='int64')
     test_repaired_df.index = test_repaired_df.index.astype(dtype='int64')
