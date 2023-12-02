@@ -4,9 +4,9 @@ import sys
 
 from pathlib import Path
 
-from source.experiment_interface import run_exp_iter_with_disparate_impact
-
 sys.path.append(str(Path(f"{__file__}").parent.parent.parent))
+
+from source.experiment_interface import run_exp_iter_with_disparate_impact
 
 import copy
 import warnings
@@ -37,7 +37,7 @@ EXPERIMENT_NAME = 'preprocessing_intervention_income_GA'
 DB_COLLECTION_NAME = 'lfr_preprocessing'
 SAVE_RESULTS_DIR_PATH = os.path.join(ROOT_DIR, 'scripts', 'results', EXPERIMENT_NAME)
 
-config_yaml_path = os.path.join(ROOT_DIR, 'folk_ga_2018_config.yaml')
+config_yaml_path = os.path.join(ROOT_DIR, 'scripts', 'folk_ga_2018_config.yaml')
 metrics_computation_config = create_config_obj(config_yaml_path=config_yaml_path)
 
 # # Print metrics_computation_config
