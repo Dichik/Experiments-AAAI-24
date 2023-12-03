@@ -12,5 +12,7 @@ source $SCRATCH/Experiments-AAAI-24/venv/bin/activate
 pip install -r ./requirements.txt
 pip install BlackBoxAuditing==0.1.54
 pip install git+https://github.com/DataResponsibly/Virny.git@development
+pip install --upgrade jupyter ipywidgets
+jupyter nbextension enable --py widgetsnbextension --sys-prefix
 
 python ./scripts/preprocessing_intervention_income_GA/Folk_GA_2018_Batch1.py
