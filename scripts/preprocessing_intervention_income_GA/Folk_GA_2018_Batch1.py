@@ -26,9 +26,9 @@ from source.utils.db_functions import connect_to_mongodb
 
 
 # Change directory if not in the correct folder
-#cur_folder_name = os.getcwd().split('\\')[-1]
-#if cur_folder_name != "fairness-variance":
-#    os.chdir("../..")
+cur_folder_name = os.getcwd().split('\\')[-1]
+if cur_folder_name != "fairness-variance":
+   os.chdir("../..")
 print('Current location: ', os.getcwd(), flush=True)
 
 # Define Input Variables
@@ -50,8 +50,8 @@ os.getenv("DB_NAME")
 client, collection_obj, db_writer_func = connect_to_mongodb(DB_COLLECTION_NAME)
 
 custom_table_fields_dct = {
-     #'session_uuid': "test",
-     'session_uuid': str(uuid.uuid4()),
+     'session_uuid': "f998e7d0-7ccd-4e08-8f9b-93b3e771bdcb",
+     # 'session_uuid': str(uuid.uuid4()),
 }
 print('Current session uuid: ', custom_table_fields_dct['session_uuid'], flush=True)
 
@@ -62,13 +62,15 @@ print(data_loader.X_data.shape)
 
 # Run experiment iterations
 # Experiment iteration 1
-exp_iter_num = 1
+exp_iter_num = 6
 experiment_seed = EXPERIMENT_SEEDS[exp_iter_num - 1]
 FAIR_INTERVENTION_PARAMS_LST = [
     "Ax=50, Az=10, Ay=10",
     "Ax=10, Az=50, Ay=10",
     "Ax=50, Az=50, Ay=10"
 ]
+# default
+# find right parameters (run pipeline)
 custom_table_fields_dct['experiment_iteration'] = f'Exp_iter_{exp_iter_num}'
 exp_iter_data_loader = copy.deepcopy(data_loader)
 models_params_for_tuning = get_model_params_for_mult_repair_levels(experiment_seed)
